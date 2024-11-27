@@ -11,89 +11,92 @@ namespace ServicesLab1
     {
         static void Main(string[] args)
         {
+
             var serviceProvider = ConfigureServices();
             using var scope = serviceProvider.CreateScope();
 
-
             var userService = scope.ServiceProvider.GetRequiredService<IUserService>();
+
             var bankAccountService = scope.ServiceProvider.GetRequiredService<IBankAccountService>();
 
-            // Example operations
+            var bankingService = scope.ServiceProvider.GetRequiredService<BankServices>();
 
             User client = new User();
 
-            Console.WriteLine("Enter User Name");
+            Console.WriteLine("Enter User Name:");
             client.Name = Console.ReadLine();
 
-            Console.WriteLine("Enter User Email");
+            Console.WriteLine("Enter User Email:");
             client.Email = Console.ReadLine();
 
-            userService.AddUser(client); // return ID after adding?
+            userService.AddUser(client);
 
+            Console.WriteLine("Enter User ID to Search:");
+            int userId = int.Parse(Console.ReadLine());
 
-            Console.WriteLine("Enter User ID to Search");
-            int ID = int.Parse(Console.ReadLine()); 
-
-            var user = userService.GetUserById(ID);
+            var user = userService.GetUserById(userId);
             Console.WriteLine($"User: {user.Name}, Email: {user.Email}");
 
+            Console.Write("Enter a new account number: ");
 
-            BankAccount BA = new BankAccount(); 
-            bankAccountService.AddAccount(new BankAccount { AccountNumber = "123456789", Balance = 1000, UserId = user.Id });
+            string accountNumber = Console.ReadLine();
+
+            bankAccountService.AddAccount(new BankAccount
+            {
+                AccountNumber = accountNumber,
+                Balance = 0,
+                UserId = user.Id
+            });
+
+            Console.Write("Enter deposit amount: ");
+            decimal depositAmount = decimal.Parse(Console.ReadLine());
+
+            Console.WriteLine(bankingService.Deposit(1, depositAmount));
+
+            Console.Write("Enter withdrawal amount: ");
+
+            decimal withdrawAmount = decimal.Parse(Console.ReadLine());
+
+            Console.WriteLine(bankingService.Withdraw(1, withdrawAmount));
+
+            Console.Write("Enter recipient account ID for transfer: ");
+
+            int recipientAccountId = int.Parse(Console.ReadLine());
+
+            Console.Write("Enter transfer amount: ");
+
+            decimal transferAmount = decimal.Parse(Console.ReadLine());
 
 
 
-
-
-
-
-
-           
-
-
-            Console.WriteLine($"Balance after deposit: {bankAccountService.BalanceInquiry(1)}");
-
-
-
-
-
-
-
-            bankAccountService.Withdraw(1, 300);
-            Console.WriteLine($"Balance after withdrawal: {bankAccountService.BalanceInquiry(1)}");
-
-            //bankAccountService.DeleteAccount(1);
-            //userService.DeleteUser(user.Id);
+            Console.WriteLine(bankingService.ExecuteTransfer(1, recipientAccountId, transferAmount));
         }
 
-        //public string Withdraw()
-        //{
-        //    //Console.WriteLine("enter account number");
-        //    //int accountNumber = int.Parse(Console.ReadLine());
-        //    //Console.WriteLine("Enter amount to withdraw");
-        //    //decimal amount = decimal.Parse(Console.ReadLine());
-
-        //    //return bankAccountService.Deposit(accountNumber, amount);
-
-        //}
-
-        public void BorrowBook()
-        {
-
-
-        }
         private static ServiceProvider ConfigureServices()
         {
             var services = new ServiceCollection();
 
             services.AddDbContext<ApplicationDbContext>();
+
             services.AddScoped<IUserRepository, UserRepository>();
+
             services.AddScoped<IBankAccountRepository, BankAccountRepository>();
+
+            services.AddScoped<ITransactionRepository, TransactionRepository>();
+
             services.AddScoped<IUserService, UserService>();
+
             services.AddScoped<IBankAccountService, BankAccountService>();
+
+            services.AddScoped<BankServices>();
 
             return services.BuildServiceProvider();
         }
+
+
+
+
     }
+
     
 }
